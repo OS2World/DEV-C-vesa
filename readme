@@ -1,0 +1,776 @@
+                     VESA package for emx, Version 1.8
+                     ---------------------------------
+
+This is a package that enables emx programs to call the VESA Bios extensions
+under DOS. It also supplies some drivers for doing fullscreen and windowed
+graphics under OS/2.
+
+The svgakit for emx uses this package and implements some higher level
+graphics routines. It should be available from the same sites as this package.
+
+
+1.  Installation:
+-----------------
+
+- Unzip the package. All files should be extracted to /emx/jm/vesa.1_8
+- change to the directory /emx/jm/vesa.1_8
+- If you've only DOS on your computer system type "make dosinstall".
+  If you've OS/2 or DOS and OS/2 type "make install".
+  Wait until compilation and installation has finished. Note that
+  "make install" expects the directories /emx/dll, /emx/bin, /emx/include
+  and /emx/lib to exist on the current drive. "make dosinstall" expects
+  the directories /emx/include and /emx/lib on the current drive.
+- To build programs with the VESA package for emx read the instructions
+  in section 5.
+
+Note: Some make utilities fail to install the VESA package properly.
+      If this happens, try "make install2" or "make dosinstall2"
+      instead of "make install" or "make dosinstall".
+      However this requires the "cp" program. It is available with
+      the gnu file utilities, available from ftp.cdrom.com.
+      If you don't want to install the "cp" program you'll have to
+      do the last installation steps yourself:
+        copy *.dll \emx\dll            (OS/2 only)
+        copy pmscreen.exe \emx\bin     (OS/2 only)
+        copy vesa.h \emx\include
+        copy vesa.a \emx\lib
+        copy vesa.lib \emx\lib
+
+Note: To build the VESA package for emx, you need to setup the
+      INCLUDE environment variable for the OS/2 resource compiler:
+      SET INCLUDE=c:\emx\include
+      Use backslashes, not slashes!
+
+2.  Preparation before running programs using the VESA package for emx:
+-----------------------------------------------------------------------
+
+2.1.  DOS:
+----------
+If your graphics card has native VESA support (i.e. VESA Bios extension
+in ROM), no preparation is necessary. If not, just load your VESA Bios
+extension TSR. A VESA Bios extension TSR should be on the driver disk of
+your graphic card, see below, section 3.
+If you don't have a VESA Bios extension TSR, only some low resolution vga
+modes (i.e. 320x200x256, 640x480x16 and 800x600x16) will be supported.
+
+2.2.  OS/2:
+-----------
+  "make install" will build several dynamic link libraries and will copy
+  them to \emx\dll. It will also copy the file "pmscreen.exe" to /emx/bin.
+  "\emx\dll" has to be mentioned in the LIBPATH statement of your CONFIG.SYS.
+  "\emx\bin" should be mentioned in the PATH environment variable.
+
+  When a program using the VESA package first calls a VESA function, it
+  loads one of the following DLLs:
+  - VESA_PM.DLL   ---  for all graphics adapters supported by OS/2
+                       Resolutions: up to 32767x32767x256
+                                    and   32767x32767x16M
+                       requires PMSCREEN.EXE to be in a directory contained
+                       in the PATH environment variable or the environment
+                       variable PMSCREEN to point to PMSCREEN.EXE.
+                       (example: "C:> set PMSCREEN=c:\emx\bin\pmscreen.exe")
+                       See Section 7.
+  - VESA_IBM.DLL  ---  for Standard VGA and all unsupported SVGA adapters
+                       Resolutions: 640x480x16
+                                    800x600x16
+                                    320x200x256
+                                    320x240x256
+                                    320x400x256
+                                    360x480x256
+                       800x600x16 is only supported on SVGA adapters
+                       recognized by OS/2's SVGA.EXE (see OS/2 docs).
+  - VESA_ALL.DLL  ---  should work on all SVGA adapters recognized by
+                       by OS/2's SVGA.EXE.
+                       Resolutions: up to 1280x1024x16
+                                          1280x1024x256
+                                          1024x768x32k
+                                          1024x768x64k
+                                          800x600x16M
+                       (depends on modes mentioned in your SVGADATA.PMI).
+  - VESA_ET4.DLL  ---  for ET4000 based SVGA adapters
+                       Resolutions: up to 1024x768x16
+                                          1024x768x256
+  - VESA_ET5.DLL  ---  for ET4000 based Hi-/True-Color SVGA adapters
+                       Resolutions: up to 1024x768x16
+                                          1024x768x256
+                                           512x768x32k
+                                           512x768x64k
+                                           341x768x16m
+  - VESA_ET6.DLL  ---  for ET4000 based SVGA adapters
+                       Resolutions: Most resolutions supported by
+                                    your DOS Vesa Bios extension
+                       Note: see section "VESA_ET6.DLL"
+  - VESA_TR8.DLL  ---  for Trident 8900 based SVGA adapters
+                       Resolutions: up to 1024x768x16
+                                          1024x768x256
+  - VESA_WD.DLL   ---  for Western Digital C?? based SVGA adapters
+                       (tested for WD C00, may work with other chipsets)
+                       Resolutions: up to 1024x768x16
+                                          1024x768x256
+  - VESA_CL.DLL   ---  for Cirrus Logics GD 5422 based SVGA adapters
+                       Resolutions: up to 1024x768x16
+                                          1024x768x256
+  - VESA_CLH.DLL  ---  for Cirrus Logics GD 5422 based SVGA adapters
+                       Resolutions: up to 1024x768x16
+                                          1024x768x256
+                                           800x600x32k
+                                           800x600x64k
+                                           640x480x16m
+                       Note: This DLL activates hi- and true color modes
+                             by direct manipulation of svga registers.
+                             This may not work on all graphics adapters
+                             and damage your monitor and/or graphics adapter!
+                             Use of this DLL is at your OWN RISK!
+  - VESA_S3.DLL   ---  for S3 based SVGA adapters
+                       Resolutions: up to 1024x768x16
+                                          1024x768x256
+                                          800x600x64k
+                                          640x480x16m
+                       (higher resolutions may work)
+
+  VESA_PM.DLL opens two Presentation Manager windows (one for text and one
+  for graphics) to display the output of your programs. All other DLLs run
+  in an OS/2 fullscreen session.
+
+  By default, the VESA package loads "VESA_PM.DLL". If you want the VESA
+  package to load another DLL specify the name of that DLL in the
+  environment variable "VESADLL". For example, type "set VESADLL=VESA_ET4"
+  to make the VESA package load "VESA_ET4.DLL". Note that you MUST NOT
+  specify the path or the extension of the DLL.
+
+- To test the VESA package run "VESATEST.EXE". It should show information
+  on all supported video modes.
+- Get the svgakit for emx. It uses this VESA package. It now supports
+  all 16-, 256-, 64k- and 16m-color modes!
+
+
+3.  How to get a DOS VESA Bios extension:
+-----------------------------------------
+
+If you don't have a VESA Bios extension for your graphic adapter, get the
+files kjb/MGL/univbe??.zip and kjb/MGL/vesatsrs.zip from
+godzilla.cgl.rmit.oz.au. They contain a large variety of Bios extensions
+for most graphic adapters.
+These files are also available from garbo.uwasa.fi and oak.oakland.edu.
+
+If you've got a standard VGA (or if you don't find a VESA Bios extension)
+you may want to use the VESA Bios extension "VESA_IBM.COM" which is included
+in this package. It supports the standard VGA modes and some non-standard
+modes all VGA cards are able to do.
+
+
+4.  How to get an OS/2 VESA Driver:
+-----------------------------------
+
+This paragraph should be obsolete now. All graphics cards supported by OS/2
+should now also be supported by the VESA package for emx using VESA_ALL.DLL
+(provided you run OS/2 Warp).
+
+If you have a graphics adapter which is not yet supported by this packages,
+you have to write your own one. Don't be afraid: It is not that difficult.
+If your graphics card is recognized by OS/2's SVGA.EXE it should work
+like that:
+- Get a DOS VESA Bios extension for your graphics card. Additional information
+  on your graphics card will be helpful.
+  (/kjb/MGL/vgadoc2.zip at godzilla.cgl.rmit.oz.au for example)
+- Compile the VESA package.
+- Boot DOS and run "VESATEST.EXE". Now it displays information on the
+  supported graphics modes. Write it down (or use "VESATEST.EXE > XYZ.DAT")
+  to pipe the output of "VESATEST.EXE" to "XYZ.DAT".
+- Look at "C:\OS2\SVGADATA.PMI" and find the modes that are both supported
+  by OS/2 and your VESA Bios extension (X,Y-resolution and number of colors
+  should be equal).
+- "Copy vesa_et4.c vesa_xxx.c" where 'xxx' is short for your graphic card.
+  Now change the 'Modes' and 'ModeInfos'-Structures according to the
+  information "VESATEST.EXE" gave you.
+- Look at the documentation on your graphics card or debug your VESA
+  Bios extension by calling interrupt 0x10 with ax=0x4f05 to see how
+  Bank switching is done for your graphics card and change the functions
+  "OS2VesaSetWindow" and "OS2VesaGetWindow".
+  You could also look at "d:\OS2\SVGADATA.PMI".
+- Change the makefile to compile and link your "vesa_xxx.c" like
+  "vesa_et4.c".
+- Run "make" to compile the new library. Then set the environment variable
+  VESADLL to "vesa_xxx" and try to run "VESATEST.EXE". The output should be
+  at least similar to the output you got when running VESATEST.EXE with DOS.
+- Get the svgakit for emx and try to run "GRAPH.EXE".
+- If everything works, send the source to me (see below). I'll include it
+  in future releases of this VESA package.
+
+If you don't know how to start, just contact me. I'll try to get infos on
+your graphics adapter and send you some code that should work. If not, we
+can try to fix the bugs together (you report the symptoms, I'll look at the
+code).
+
+
+5.  VESA function reference:
+----------------------------
+
+a) Look at the file "vesa.txt" in "/kjb/MGL/vgadoc2.zip" at
+   godzilla.cgl.rmit.oz.au for reference information on the 'real'
+   VESA Bios extension.
+
+b) - To use the VESA-package with DOS you have allow direct port
+     and memory access for your programs. This can be done by
+     running "emxbind -aq myexe.exe -acim" after linking.
+   - All DLLs except VESA_PM.DLL need your program to be run in
+     an OS/2 fullscreen session. To tell OS/2 to automatically
+     switch to an OS/2 fullscreen session when your program starts
+     use the emxbind utility after linking your program:
+     "emxbind -e -f myexe.exe"
+
+c) Reference:
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL VesaInitialize(void);
+
+    Initialize VESA-Driver. Return TRUE if sucessful, else FALSE.
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL VesaGetInfo(PVESAINFO pVesaInfo);
+
+    Get VESA-Driver and SuperVGA Information:
+
+    typedef struct
+      {
+        VESAWORD Version;          /* VESA Version number (now 1.2) */
+        VESACHAR *OEMName;         /* pointer to OEM name           */
+        VESAWORD *Modes;           /* pointer to list of supported  */
+      } VESAINFO, *PVESAINFO;      /* modes terminated with 0xFFFF  */
+
+    VesaGetInfo returns TRUE on success, else FALSE. If VesaGetInfo returns
+    FALSE the VESA Bios extension or emx VESA driver is not loaded (DOS only).
+
+    See also: VesaGetInfo()
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL VesaGetModeInfo(VESAWORD Mode, PVESAMODEINFO pVesaModeInfo);
+
+    Get information on specified mode. See "VESA.TXT" mentioned in a)
+    for an explanation of the fields. The fields called "reserved" are not
+    included here. Two fields are different from standard VESA:
+
+    SetWindowFunc points to a function to set the current memory window.
+    GetWindowFunc points to a function to get the current memory window.
+    (Standard VESA has only one pointer for both "get" and "set").
+    Look at VesaSetWindow and VesaGetWindow for parameters for
+    SetWindowFunc and GetWindowFunc.
+
+    typedef struct
+      {
+        VESAWORD ModeAttributes;
+        VESACHAR WindowAAttributes;
+        VESACHAR WindowBAttributes;
+        VESAWORD WindowGranularity;
+        VESAWORD WindowSize;
+        VESAPTR  WindowAStart;
+        VESAPTR  WindowBStart;
+        VESASET  SetWindowFunc;
+        VESAGET  GetWindowFunc;
+        VESAWORD BytesPerScanline;
+        VESAWORD Width;
+        VESAWORD Height;
+        VESACHAR CharacterWidth;
+        VESACHAR CharacterHeight;
+        VESACHAR NumberOfMemoryPlanes;
+        VESACHAR NumberOfBitsPerPixel;
+        VESACHAR NumberOfBanks;
+        VESACHAR MemoryModelType;
+        VESACHAR SizeOfBank;
+        VESACHAR NumberofPages;
+        VESACHAR RedMaskSize;
+        VESACHAR RedMaskPosition;
+        VESACHAR GreenMaskSize;
+        VESACHAR GreenMaskPosition;
+        VESACHAR BlueMaskSize;
+        VESACHAR BlueMaskPosition;
+        VESACHAR ReservedMaskSize;
+        VESACHAR ReservedMaskPosition;
+      } VESAMODEINFO, *PVESAMODEINFO;
+
+    VesaGetModeInfo returns TRUE on success and FALSE if the requested mode
+    is not supported.
+
+    CAUTION: When running with OS/2 the WindowAStart and WindowBStart fields
+       are only valid if:
+       - You have activated the graphics mode by calling VesaSetMode().
+       - Your application is executed in foreground (can be forced by
+         calling VesaLockScreen() before calling VesaGetModeInfo();
+         don't forget to call VesaUnlockScreen()).
+
+    See also: VesaGetInfo(), VesaSetMode(), VesaGetMode(),
+              VesaSetWindow(), VesaGetWindow(),
+              VesaLockScreen(), VesaUnlockScreen()
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL VesaSetMode(VESAWORD Mode);
+VESABOOL VesaGetMode(PVESAWORD Mode);
+
+    Activate specified video mode/get current video mode.
+
+    VesaSetMode/VesaGetMode returns TRUE on success else FALSE.
+
+    See also: VesaGetModeInfo()
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL VesaSetWindow(VESACHAR Window, VESAWORD Address);
+VESABOOL VesaGetWindow(VESACHAR Window, PVESAWORD Address);
+
+    Set/Get current video memory window address.
+
+    VesaSetWindow/VesaGetWindow returns TRUE on success else FALSE.
+
+    CAUTION: Lock the screen via VesaLockScreen() before calling
+       VesaSetWindow()/VesaGetWindow(). To increase speed these functions
+       neither test if the screen is already locked nor lock it themselves.
+       Calling these functions without locking the screen can cause
+       unpredictable results!
+
+    See also: VesaGetModeInfo(), VesaLockScreen(), VesaUnlockScreen()
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL VesaSetScanlineLength(VESAWORD NumberOfPixels);
+VESABOOL VesaGetScanlineLength(PVESAWORD BytesPerScanline,
+                               PVESAWORD NumberOfPixels,
+                               PVESAWORD NumberOfScanlines);
+
+    Set/Get logical scanline length.
+
+    VesaSetScanlineLength/VesaGetScanlineLength returns TRUE on success
+    else FALSE. If screen is not locked and program is running in
+    background these functions return FALSE.
+
+    See also: VesaGetModeInfo(), VesaLockScreen(), VesaUnlockScreen()
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL VesaSetSwitchFunc(VESASWITCH SwitchFunc);
+
+    Specify a function which is called each time the user switches the
+    program from background to foreground or vice versa. The function
+    has to save/restore the contents of the video memory.
+
+    Calling VesaSetSwitchFunc(NULL) causes OS/2 to save/restore the
+    video memory itself (this is the default).
+
+    'SwitchFunc' has to be defined as follows:
+
+    void SwitchFunc(int Restore)
+    {
+      ...
+    }
+
+    The Parameter 'Restore' signals the function whether it should save
+    (Restore = 0) or restore (Restore = 1) the video memory.
+
+    To access the video memory from within this function you don't have
+    to use screen locking.
+
+    VesaSetSwitchFunc returns TRUE on success else FALSE.
+
+    This function has no effect under DOS and does not belong to the
+    standard VESA Bios extension.
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL VesaLockScreen(VESACHAR wait);
+
+    This function locks the screen. This is required before
+    accessing the screen memory. The parameter 'wait' specifies whether
+    VesaLockScreen() should return with an error if the program isn't
+    in foreground (wait = 0) or should wait until the program is
+    switched to foreground (wait = 1).
+
+    VesaLockScreen returns TRUE if locking was successful else FALSE
+    (if wait = 0).
+
+    This function has no effect under DOS and does not belong to the
+    standard VESA Bios extension.
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL VesaUnlockScreen(void);
+
+    This function unlocks the screen previously locked by VesaLockScreen().
+
+    This function has no effect under DOS and does not belong to the
+    standard VESA Bios extension.
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL VesaSetModified(void);
+
+    This function tells the VESA Bios extension to update the screen.
+
+    This function has only effect when VESA_PM.DLL is used under OS/2.
+    It does not belong to the standard VESA Bios extension.
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL VesaSetPalette(VESAWORD   StartIndex,
+                        VESAWORD   NumberOfEntries,
+                        PCVESACHAR Palette,
+                        VESABOOL   Wait);
+VESABOOL VesaGetPalette(VESAWORD   StartIndex,
+                        VESAWORD   NumberOfEntries,
+                        PVESACHAR  Palette);
+
+    Set/Get the palette entries from StartIndex to (StartIndex +
+    NumberOfEntries - 1). For each palette entry 3 bytes are taken
+    from or copied to Palette in the order red, green, blue. Each byte
+    should have a value between 0 and 63, inclusive.
+
+    If Wait is non-zero VesaSetPalette waits for the vertical retrace
+    to avoid snow on the screen.
+
+    This function does not belong to the standard VESA Bios extension.
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL VesaGetCharacter(PVESACHAR pchar);
+
+    Wait until a key is pressed and return its ASCII-Code in *pchar. If
+    a function key is pressed, VesaGetCharacter returns 0 in *pchar. The
+    next call to VesaGetCharacter will return the SCAN-Code of the key
+    pressed.
+
+    This function does not belong to the standard VESA Bios extension.
+
+    Note: You may use "normal" emx, C library, or OS/2 API calls instead
+          of VesaGetCharacter. However, if you want your program to work
+          with VESA_PM.DLL under OS/2 you should use VesaGetCharacter.
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL VesaKeyboardHit(void);
+
+    Return TRUE if a key has been pressed.
+
+    This function does not belong to the standard VESA Bios extension.
+
+    Note: You may use "normal" emx, C library, or OS/2 API calls instead
+          of VesaKeyboardHit. However, if you want your program to work
+          with VESA_PM.DLL under OS/2 you should use VesaKeyboardHit.
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL MouseOpen(void);
+
+    Initialize and open the mouse device. Returns TRUE if a mouse could
+    be found, else FALSE.
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL MouseClose(void);
+
+    Close the mouse device. Returns FALSE if no mouse is connected.
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL MouseShow(void);
+
+    Enable mouse pointer drawing. Only works in text modes.
+    Returns TRUE in text modes, FALSE in graphics modes.
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL MouseHide(void);
+
+    Disable mouse pointer drawing. Only works in text modes.
+    Returns TRUE in text modes, FALSE in graphics modes.
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL MouseSetPosition(VESAWORD x, VESAWORD y);
+
+    Set the mouse pointer to the specified position.
+    The upper left corner of the screen is (0, 0).
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL MouseGetPosition(PVESAWORD x, PVESAWORD y);
+
+    Return the current mouse pointer position.
+    The upper left corner of the screen is (0, 0).
+
+------------------------------------------------------------------------------
+#include <vesa.h>                                               [emx/vesa-emx]
+
+VESABOOL MouseGetEvent(PVESAWORD x, PVESAWORD y,
+                       PVESAWORD status, VESABOOL wait);
+
+    Get a mouse event, i.e.:
+    - mouse motion
+    - mouse button press
+    - mouse button release
+    Return current mouse position and button status.
+    The upper left corner of the screen is (0, 0).
+    The button status is returned as follows:
+    - bit 0 = 1 - button 1 pressed
+    - bit 1 = 1 - button 2 pressed
+    - bit 2 = 1 - button 3 pressed
+
+    If wait is FALSE, MouseGetEvent returns immediately if no
+    event is available and reports the current mouse position
+    and button status.
+    If wait is TRUE, MouseGetEvent waits until a mouse event
+    occurs.
+
+    MouseGetEvent returns TRUE if a mouse event occured,
+    else FALSE.
+
+------------------------------------------------------------------------------
+
+
+6.  VESA_ET6.DLL:
+-----------------
+
+VESA_ET6.DLL does not use OS/2-functions to switch between video modes. It
+programs the registers of the ET4000 graphics controller directly. The
+information on the video modes is stored in the file "vesamode.dat". This
+information may differ between different graphic adapters and monitors. So
+it has to be created first. To do this, follow the following instructions:
+
+1.Boot DOS (because "modedump.exe" uses emx, you cannot run it in
+  OS/2 DOS-Fullscreen).
+2.Load your VESA Bios extension.
+3.Run "modedump.exe". A file called "vesamode.dat" should be created.
+4.Move "vesamode.dat" to some directory mentioned in your DPATH statement
+  in config.sys (I put it in C:\OS2).
+
+CAUTION: Because VESA_ET6.DLL directly programs the graphic adapter, it
+         may cause damage to your monitor!
+         Never use a "vesamode.dat" on a computer+monitor other than the
+         one you created the file with!
+         Use of this DLL is at your OWN RISK!
+
+
+7.  The VESA_PM.DLL and PMSCREEN.EXE:
+-------------------------------------
+
+When your program first calls a VESA function, the VESA library will load
+VESA_PM.DLL (if you didn't specify another DLL as default, see section 2.2).
+VESA_PM.DLL will start PMSCREEN.EXE. All output via stdout and stderr will
+be redirected to the text window of PMSCREEN.EXE. Most input to either the
+text window or the graphics window of PMSCREEN is redirected to stdin of
+your program. In addition you may ask for input using VesaGetCharacter and
+VesaKeyboardHit.
+Do not use OS/2 VIO- and KBD-Calls. They will act in the window/fullscreen
+your program was started from.
+
+In the system menu of PMSCREEN.EXE you may choose "Update Screen" to force
+PMSCREEN to update its screen.
+
+If you choose "PM-Screen Settings" PMSCREEN will show you its settings
+dialog. It contains the following entries:
+- Time between screen updates:
+  The screen will be updated all ... milliseconds, if neccesary (i.e.
+  if the screen contents have changed, and your program correctly told
+  PMSCREEN that it changed the contents).
+- Use physical palette:
+  If checked, PMSCREEN will modify the physical palette to best display
+  the colors your programs needs.
+- Use full palette:
+  By default, OS/2 reserves about 20 palette entries for its own use
+  and does not let your program change then. If you check this button,
+  PMSCREEN will use even these 20 entries of the palette.
+  At least on two machines (with ET4000 and ATI Mach64 card), this seems
+  not to work correctly. The palette is only modified when PMSCREEN runs
+  in background, while it should be modified when it runs in foreground...
+- Display in original size:
+  This tells PMSCREEN not to stretch or shrink the output of your program.
+  This will increase speed and quality of the output.
+- Font size:
+  You can select the size of the font in PMSCREEN's text window. You may
+  enter the font size in horizontal and vertical direction. PMSCREEN's
+  will look for the font best matching the values entered by you. So, by
+  entering (1,1) you'll get a very small font, (99,99) will select a
+  large font.
+  All font sizes available in OS/2 windowed sessions are available in
+  PMSCREEN's text window.
+
+You can save PMSCREEN's settings. You may specify a system default setting
+and a default setting for each program using the VESA package for emx. Just
+push the right button in PMSCREEN's settings dialog.
+
+In order to be found by VESA_PM.DLL the program PMSCREEN.EXE has to be
+in a directory mentioned in the PATH environment variable or the environment
+variable PMSCREEN must contain path and filename of PMSCREEN.EXE.
+
+To enable other than the standard resolutions in PMSCREEN.EXE you may
+also set the PMSCRMOD environment variable. It may contain a semicolon
+separated list of mode descriptions in the following fomat:
+
+    <Hex Mode Number>,<X Resolution>,<Y Resolution>,<Bits Per Pixel>
+where                      is
+      Hex Mode Number         any hex number from 0x0 to 0xFFFE except 0x3
+      X Resolution            any number from 1 to 32767
+      Y Resolution            any number from 1 to 32767
+      Bits Per Pixel          8 or 24.
+
+Examples:
+    - set PMSCRMOD=200,1600,1280,24
+      Defines Mode 0x200 as 1600 * 1280 pixels with 16M colors.
+    - set PMSCRMOD=200,1600,1280,8;201,32767,32767,24
+      Defines Mode 0x200 as 1600 * 1280 pixels with 256 colors,
+          and Mode 0x201 as 32767 * 32767 pixels with 16M colors
+          (requires about 3.2 GByte of memory, not tested...)
+
+If you specify modes using the PMSCRMOD environment variable the standard
+modes (except text mode 0x03) will be disabled.
+
+
+8.  Known Problems (under OS/2):
+--------------------------------
+
+PMSCREEN.EXE/VESA-PM.DLL:
+- stdin redirection (PMSCREEN to your program) doesn't work as it should;
+  no echo, no line editor.
+  This will hopefully be fixed in a future version.
+
+VESA-ALL.DLL:
+- it's difficult to determine the scanline length for the non standard
+  graphics modes. I couldn't find an appropiate OS/2 function and the
+  data for the scanline length in svgadata.pmi seems to be junk.
+
+all excect VESA-PM.DLL:
+- problems switching back from hi-res graphics mode to text mode. Screen
+  displays garbage or nothing at all. Switching to another session and
+  back might help.
+- printf("\a") (and similar) does not create a beep in graphics mode.
+  Use OS/2's DosBeep() instead.
+
+
+9.  History:
+------------
+
+Version 1.1 (04/03/1993):
+  - initial release
+Version 1.2 (04/13/1993):
+  - Bug fixed in vesa_*.dll:
+    if VesaSetScanLineLength can't set the desired scanline length
+    it has to set the first possible GREATER than the desired (was LOWER)
+  - Included standard VGA non-bios modes 320x240x256, 320x400x256
+    and 360x480x256 in vesa_ibm.dll.
+Version 1.3 (05/14/1993)
+  - VESA_IBM.COM and VESA_EMX.COM now check if they are already installed
+  - mode information on standard vesa modes and standard vga modes (12h,13h)
+    now included in libvesa.a:
+    - should solve problems with some VESA Bios extensions
+    - modes 12h and 13h now available with any VESA Bios extension
+  - new VESA_TR8.DLL for graphics adapters with Trident 8900 chipset (beta)
+  - new VESA_ET6.DLL to get access to more video modes
+  - removed dummy-function "atexit" from common.c
+Version 1.4 (06/23/1993)
+  - an Interface to the DOS VESA-Bios Extension is now part of emx*.exe.
+    So vesa_emx.com is not neccessary any more.
+  - VESA_TR8.DLL should now work
+  - fixed some silly bugs
+Version 1.5 (12/20/1993)
+  - many big changes, some are:
+    - new VESA_PM.DLL to run program in a PM-Window
+    - Keyboard-Interface added
+    - DLLs now compiled with -Zomf -Zsys.
+  - some small changes to make vesa_emx work with emx 0.8h
+Version 1.6 (04/28/1994)
+  - some bugs fixed
+  - PMSCREEN can now save settings
+  - font size in PMSCREEN's text window can now be changed
+  - new VESA dlls for Cirrus Logic, S3 and Western Digital cards
+  - now, multiple programs using the VESA package can run at a time
+    (because of a bug, this was not possible before)
+  - simple mouse interface added
+Version 1.7 (10/15/1994)
+  - minor bugs fixed
+  - Keyboard- and Mouse-Interface of PMSCREEN fixed and extended
+  - true color modes added to PMSCREEN
+  - custom modes added to PMSCREEN (using PMSCRMOD environment variable)
+Version 1.8 (02/10/1995)
+  - minor changes to design
+  - VESA_ALL.DLL added (chipset independent DLL, uses IOCTL to switch banks)
+  - now compiles under emx 0.9a without changes
+Version 1.9 (03/05/1996)
+  - bug fixed in MouseGetEvent
+  - field 'MemoryBanks' in VESAINFO-struct added. Vesa 1.2 and above
+    compatible VBE's should fill this field with the number of 64Kb banks
+    present on the adapter (AL).
+  - minor additions in 'common.c' and 'vesa_dos.c' to initialize MemoryBanks-
+    field (AL).
+  - macros for 'ModeAttributes'-bits and Vesa memory model types in 'vesa.h'
+    added (AL).
+
+
+10.  License:
+-------------
+
+- You are allowed to copy and change the whole VESA package provided that you
+  do not change the copyright statement in the files and copy this
+  documentation together with the VESA package.
+- You are allowed to copy the DLL's (for example together with your
+  application programs) and PMSCREEN.EXE.
+- You are allowed to copy "VESA_IBM.COM" and "MODEDUMP.EXE".
+
+
+11.  Future plans:
+------------------
+
+- fix problems mentioned in 8.
+- ...
+
+
+12.  Thanks:
+------------
+
+Thanks to all who developed new VESA-DLL's for OS/2!
+Thanks to all who reported bugs and helped to correct them.
+
+
+13.  Authors:
+-------------
+
+The VESA package was written by:
+Johannes Martin
+Pfarrer-Dorn-Straáe 25
+D-55127 Mainz-Marienborn
+Germany
+eMail: jmartin@goofy.zdv.uni-mainz.de
+
+Improvements in version 1.9 (look for label (AL) in history) were made by:
+Andreas Leipelt
+Mathematisches Seminar der
+Universitaet Hamburg
+Bundesstrasse 55
+20146 Hamburg
+Germany
+eMail: leipelt@math.uni-hamburg.de
+
+
+14.  Copyright:
+---------------
+
+The VESA package is Copyright (c) 1993-1996 by Johannes Martin.

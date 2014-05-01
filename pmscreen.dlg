@@ -1,0 +1,25 @@
+DLGINCLUDE 1 "pmscreen.h"
+
+DLGTEMPLATE ID_SETTINGS LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+    DIALOG  "PM-Screen Settings", ID_SETTINGS, 61, 43, 208, 72, WS_VISIBLE,
+            FCF_SYSMENU | FCF_TITLEBAR
+    BEGIN
+        ENTRYFIELD      "", DID_INTERVALL, 6, 56, 32, 8, ES_MARGIN
+        LTEXT           "(ms) Time between screen updates", 104, 45, 55, 150,
+                        9
+        CHECKBOX        "Use physical palette", DID_USEPAL, 6, 41, 102, 10
+        AUTOCHECKBOX    "Use full palette", DID_FULLPAL, 6, 29, 102, 10
+        AUTOCHECKBOX    "Display in original size", DID_ORGSIZE, 6, 16, 103,
+                        10
+        LTEXT           "Font size:", -1, 5, 5, 40, 8
+        LTEXT           "x", -1, 65, 5, 6, 8
+        ENTRYFIELD      "", DID_YSIZE, 48, 5, 14, 8, ES_MARGIN
+        ENTRYFIELD      "", DID_XSIZE, 72, 5, 14, 8, ES_MARGIN
+        GROUPBOX        "Save as:", -1, 109, 18, 97, 37
+        PUSHBUTTON      "Applications default", DID_APPDEF, 113, 35, 89, 12
+        PUSHBUTTON      "System default", DID_SYSDEF, 113, 21, 89, 12
+        DEFPUSHBUTTON   "Ok", DID_OK, 113, 3, 34, 12
+        PUSHBUTTON      "Cancel", DID_CANCEL, 152, 3, 50, 12
+    END
+END

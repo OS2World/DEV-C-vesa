@@ -1,0 +1,142 @@
+   -----------------------------------------------------------------------
+   This is the documentation for the runtime-only distribution. If you got
+          the full package, please read the file "readme" instead!
+   -----------------------------------------------------------------------
+
+                     VESA package for emx, Version 1.9
+                        (runtime-only distribution)
+                     ---------------------------------
+
+This is a package that enables emx programs to call the VESA Bios extensions
+under DOS. It also supplies some drivers for doing fullscreen and windowed
+graphics under OS/2.
+
+The svgakit for emx uses this package and implements some higher level
+graphics routines. It should be available from the same sites as this package.
+
+
+1.  Installation:
+-----------------
+
+With the root directory as your current directory, unzip the package by
+typing "unzip vesa19bn.zip". All files should be extracted to either
+the \emx\jm\vesa.1_9 directory, the \emx\dll directory, or the \emx\bin
+directory.
+
+
+2.  Preparation before running programs using the VESA package for emx:
+-----------------------------------------------------------------------
+
+2.1.  DOS:
+----------
+If your graphics card has native VESA support (i.e. VESA Bios extension
+in ROM), no preparation is necessary. If not, just load your VESA Bios
+extension TSR. A VESA Bios extension TSR should be on the driver disk of
+your graphic card, see below, section 3.
+If you don't have a VESA Bios extension TSR, only some low resolution vga
+modes (i.e. 320x200x256, 640x480x16 and 800x600x16) will be supported.
+
+2.2.  OS/2:
+-----------
+Some dynamik link libraries (DLLs) have been installed in your \emx\dll
+directory in the installation step. The program "pmscreen.exe" has been
+installed in your \emx\bin directory.
+
+Edit you "config.sys" file so the \emx\dll directory is mentionend in the
+LIBPATH statement and \emx\bin is mentionend in the PATH statement.
+
+When a program using the VESA package first calls a VESA function, it
+loads one of the following DLLs:
+  - VESA_PM.DLL   ---  for all graphics adapters supported by OS/2
+                       Resolutions: up to 32767x32767x256
+                                    and   32767x32767x16M
+                       requires PMSCREEN.EXE to be in a directory contained
+                       in the PATH environment variable or the environment
+                       variable PMSCREEN to point to PMSCREEN.EXE.
+                       (example: "C:> set PMSCREEN=c:\emx\bin\pmscreen.exe")
+                       See Section 7.
+  - VESA_IBM.DLL  ---  for Standard VGA and all unsupported SVGA adapters
+                       Resolutions: 640x480x16
+                                    800x600x16
+                                    320x200x256
+                                    320x240x256
+                                    320x400x256
+                                    360x480x256
+                       800x600x16 is only supported on SVGA adapters
+                       recognized by OS/2's SVGA.EXE (see OS/2 docs).
+  - VESA_ALL.DLL  ---  should work on all SVGA adapters recognized by
+                       by OS/2's SVGA.EXE.
+                       Resolutions: up to 1280x1024x16
+                                          1280x1024x256
+                                          1024x768x32k
+                                          1024x768x64k
+                                          800x600x16M
+                       (depends on modes mentioned in your SVGADATA.PMI).
+  - VESA_ET4.DLL  ---  for ET4000 based SVGA adapters
+                       Resolutions: up to 1024x768x16
+                                          1024x768x256
+  - VESA_ET5.DLL  ---  for ET4000 based Hi-/True-Color SVGA adapters
+                       Resolutions: up to 1024x768x16
+                                          1024x768x256
+                                           512x768x32k
+                                           512x768x64k
+                                           341x768x16m
+  - VESA_ET6.DLL  ---  see file "readme" for more information!
+  - VESA_TR8.DLL  ---  for Trident 8900 based SVGA adapters
+                       Resolutions: up to 1024x768x16
+                                          1024x768x256
+  - VESA_WD.DLL   ---  for Western Digital C?? based SVGA adapters
+                       (tested for WD C00, may work with other chipsets)
+                       Resolutions: up to 1024x768x16
+                                          1024x768x256
+  - VESA_CL.DLL   ---  for Cirrus Logics GD 5422 based SVGA adapters
+                       Resolutions: up to 1024x768x16
+                                          1024x768x256
+  - VESA_CLH.DLL  ---  for Cirrus Logics GD 5422 based SVGA adapters
+                       Resolutions: up to 1024x768x16
+                                          1024x768x256
+                                           800x600x32k
+                                           800x600x64k
+                                           640x480x16m
+                       Note: This DLL activates hi- and true color modes
+                             by direct manipulation of svga registers.
+                             This may not work on all graphics adapters
+                             and damage your monitor and/or graphics adapter!
+                             Use of this DLL is at your OWN RISK!
+  - VESA_S3.DLL   ---  for S3 based SVGA adapters
+                       Resolutions: up to 1024x768x16
+                                          1024x768x256
+                                          800x600x64k
+                                          640x480x16m
+                       (higher resolutions may work)
+
+  VESA_PM.DLL opens two Presentation Manager windows (one for text and one
+  for graphics) to display the output of your programs. All other DLLs run
+  in an OS/2 fullscreen session.
+
+  By default, the VESA package loads "VESA_PM.DLL". If you want the VESA
+  package to load another DLL specify the name of that DLL in the
+  environment variable "VESADLL". For example, type "set VESADLL=VESA_ET4"
+  to make the VESA package load "VESA_ET4.DLL". Note that you MUST NOT
+  specify the path or the extension of the DLL.
+
+
+3.  How to get a DOS VESA Bios extension:
+-----------------------------------------
+
+If you don't have a VESA Bios extension for your graphic adapter, get the
+files kjb/MGL/univbe??.zip and kjb/MGL/vesatsrs.zip from
+godzilla.cgl.rmit.oz.au. They contain a large variety of Bios extensions
+for most graphic adapters.
+These files are also available from garbo.uwasa.fi and oak.oakland.edu.
+
+If you've got a standard VGA (or if you don't find a VESA Bios extension)
+you may want to use the VESA Bios extension "VESA_IBM.COM" which is included
+in this package. It supports the standard VGA modes and some non-standard
+modes all VGA cards are able to do.
+
+
+4. More Information:
+--------------------
+
+Please read the file "readme" for more information.

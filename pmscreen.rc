@@ -1,0 +1,6 @@
+#include <os2.h>
+#include "pmscreen.h"
+
+POINTER ID_PMSCREEN pmscreen.ico
+
+rcinclude "pmscreen.dlg"

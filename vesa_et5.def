@@ -1,0 +1,32 @@
+; vesa_os2.def (emx+gcc)
+LIBRARY vesa_et5 INITINSTANCE TERMINSTANCE
+
+DESCRIPTION 'OS/2 VESA DLL'
+
+DATA MULTIPLE NONSHARED
+
+EXPORTS
+  OS2VesaGetInfo                           @1
+  OS2VesaGetModeInfo                       @2
+  OS2VesaSetMode                           @3
+  OS2VesaGetMode                           @4
+  OS2VesaSetWindow                         @5
+  OS2VesaGetWindow                         @6
+  OS2VesaSetScanlineLength                 @7
+  OS2VesaGetScanlineLength                 @8
+  OS2VesaSetSwitchFunc                     @9
+  OS2VesaLockScreen                        @10
+  OS2VesaUnlockScreen                      @11
+  OS2VesaSetModified                       @12
+  OS2VesaSetPalette                        @13
+  OS2VesaGetPalette                        @14
+  OS2VesaGetCharacter                      @15
+  OS2VesaKeyboardHit                       @16
+
+  OS2MouseOpen                             @20
+  OS2MouseClose                            @21
+  OS2MouseShow                             @22
+  OS2MouseHide                             @23
+  OS2MouseSetPosition                      @24
+  OS2MouseGetPosition                      @25
+  OS2MouseGetEvent                         @26
